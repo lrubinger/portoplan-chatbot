@@ -8,9 +8,8 @@ import {
   Bot,
   Settings,
   LogOut,
-  Building2,
-  UserCheck,
-  Zap,
+  KanbanSquare,
+  Workflow,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
@@ -142,6 +141,48 @@ export default function Layout() {
               </TooltipTrigger>
               <TooltipContent side="right">
                 <p className="text-xs font-semibold">Regras &amp; Automações</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Kanban */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <NavLink
+                  to="/kanban"
+                  className={({ isActive }) =>
+                    `h-11 w-11 rounded-xl flex items-center justify-center transition ${
+                      isActive
+                        ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`
+                  }
+                >
+                  <KanbanSquare className="h-5 w-5" />
+                </NavLink>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="text-xs font-semibold">Kanban de Atendimentos</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Fluxos */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <NavLink
+                  to="/fluxos"
+                  className={({ isActive }) =>
+                    `h-11 w-11 rounded-xl flex items-center justify-center transition ${
+                      isActive
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`
+                  }
+                >
+                  <Workflow className="h-5 w-5" />
+                </NavLink>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="text-xs font-semibold">Fluxos de Atendimento</p>
               </TooltipContent>
             </Tooltip>
 

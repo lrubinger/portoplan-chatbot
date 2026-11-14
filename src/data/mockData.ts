@@ -6,7 +6,12 @@ import {
   QuickReply,
   Automation,
   BusinessHours,
+  KanbanCard,
+  KanbanColumn,
+  KanbanColumnId,
+  Flow,
 } from '@/types/chat'
+// Flow import used below in INITIAL_FLOWS
 
 export const DEMO_USERS: User[] = [
   {
@@ -456,3 +461,238 @@ export const INITIAL_BUSINESS_HOURS: BusinessHours = {
   sundayEnabled: false,
   timezone: 'America/Sao_Paulo (Horário de Brasília)',
 }
+
+// ---------- Kanban ----------
+
+export const KANBAN_COLUMNS: KanbanColumn[] = [
+  { id: 'novo', title: 'Novo contato', accent: 'border-t-sky-500', dot: 'bg-sky-500' },
+  {
+    id: 'em-atendimento',
+    title: 'Em atendimento',
+    accent: 'border-t-emerald-500',
+    dot: 'bg-emerald-500',
+  },
+  {
+    id: 'aguardando-documentos',
+    title: 'Aguardando documentos',
+    accent: 'border-t-amber-500',
+    dot: 'bg-amber-500',
+  },
+  {
+    id: 'proposta-enviada',
+    title: 'Proposta enviada',
+    accent: 'border-t-violet-500',
+    dot: 'bg-violet-500',
+  },
+  { id: 'fechado', title: 'Fechado', accent: 'border-t-slate-500', dot: 'bg-slate-500' },
+]
+
+const cardFromContact = (
+  contact: Contact,
+  summary: string,
+  idleTime: string,
+  idleLevel: KanbanCard['idleLevel'],
+  columnId: KanbanColumnId,
+  dealValue?: string,
+): KanbanCard => ({
+  id: `kb-${contact.id}`,
+  contactId: contact.id,
+  contactName: contact.name,
+  contactAvatar: contact.avatar,
+  phone: contact.phone,
+  summary,
+  interest: contact.tags[0],
+  idleTime,
+  idleLevel,
+  dealValue,
+  tags: contact.tags,
+  columnId,
+})
+
+export const INITIAL_KANBAN_CARDS: KanbanCard[] = [
+  cardFromContact(
+    INITIAL_CONTACTS[1],
+    'Pediu simulação com entrada de R$ 80 mil',
+    'há 5 min',
+    'ok',
+    'novo',
+    'R$ 420 mil',
+  ),
+  cardFromContact(
+    INITIAL_CONTACTS[5],
+    'Carta de crédito aprovada, falta unidade',
+    'há 2 dias',
+    'warning',
+    'aguardando-documentos',
+    'R$ 610 mil',
+  ),
+  cardFromContact(
+    INITIAL_CONTACTS[0],
+    'Visita agendada, quer 3 quartos',
+    'há 1 dia',
+    'warning',
+    'proposta-enviada',
+    'R$ 580 mil',
+  ),
+  cardFromContact(
+    INITIAL_CONTACTS[3],
+    'Studio para locação, aguardando docs',
+    'há 6 dias',
+    'late',
+    'aguardando-documentos',
+  ),
+  cardFromContact(
+    INITIAL_CONTACTS[4],
+    'Visita realizada, aguardando decisão',
+    'há 3 dias',
+    'late',
+    'proposta-enviada',
+    'R$ 750 mil',
+  ),
+  cardFromContact(
+    INITIAL_CONTACTS[2],
+    'Contrato assinado, chave na mão',
+    'há 1 semana',
+    'late',
+    'fechado',
+    'R$ 390 mil',
+  ),
+]
+
+// ---------- Atendimento por Fluxo ----------
+
+export const INITIAL_FLOWS: Flow[] = [
+  {
+    id: 'flow-1',
+    name: 'Boas-vindas',
+    description: 'Primeiro contato do lead no WhatsApp com menu de opções.',
+    triggerLabel: 'Primeira mensagem do cliente',
+    isActive: true,
+    updatedAt: '24/02/2025',
+    steps: [
+      {
+        id: 'f1-s1',
+        type: 'message',
+        title: 'Mensagem de boas-vindas',
+        content:
+          'Olá! Bem-vindo à PortoPlan Imóveis. 🏢 Sou o assistente virtual e vou te ajudar a encontrar o imóvel ideal.',
+      },
+      {
+        id: 'f1-s2',
+        type: 'question',
+        title: 'Como podemos ajudar?',
+        content: 'Sobre o que você gostaria de saber mais?',
+        options: [
+          { id: 'f1-s2-o1', label: 'Comprar um imóvel', nextStepId: 'f1-s3' },
+          { id: 'f1-s2-o2', label: 'Falar com atendente', nextStepId: 'f1-s4' },
+          { id: 'f1-s2-o3', label: 'Outro assunto', nextStepId: 'f1-s5' },
+        ],
+      },
+      {
+        id: 'f1-s3',
+        type: 'action',
+        title: 'Encaminhar para equipe de vendas',
+        actionKind: 'transfer_agent',
+        actionDetail: 'Equipe Comercial',
+      },
+      {
+        id: 'f1-s4',
+        type: 'action',
+        title: 'Transferir para atendente',
+        actionKind: 'transfer_agent',
+        actionDetail: 'Atendente disponível',
+      },
+      {
+        id: 'f1-s5',
+        type: 'message',
+        title: 'Encerramento cordial',
+        content: 'Sem problemas! Posso te ajudar com mais alguma coisa?',
+      },
+    ],
+  },
+  {
+    id: 'flow-2',
+    name: 'Qualificação de lead',
+    description: 'Faz perguntas para entender o perfil e a urgência do lead.',
+    triggerLabel: 'Cliente demonstra interesse em compra',
+    isActive: true,
+    updatedAt: '20/02/2025',
+    steps: [
+      {
+        id: 'f2-s1',
+        type: 'question',
+        title: 'Faixa de investimento',
+        content: 'Qual faixa de valor você considera para o investimento?',
+        options: [
+          { id: 'f2-s1-o1', label: 'Até R$ 300 mil', nextStepId: 'f2-s3' },
+          { id: 'f2-s1-o2', label: 'R$ 300 a 600 mil', nextStepId: 'f2-s3' },
+          { id: 'f2-s1-o3', label: 'Acima de R$ 600 mil', nextStepId: 'f2-s3' },
+        ],
+      },
+      {
+        id: 'f2-s2',
+        type: 'condition',
+        title: 'Lead qualificado?',
+        content: 'Se respondeu ao menos 2 perguntas e tem faixa definida',
+      },
+      {
+        id: 'f2-s3',
+        type: 'action',
+        title: 'Marcar etiqueta no contato',
+        actionKind: 'tag_contact',
+        actionDetail: 'Lead Qualificado',
+      },
+      {
+        id: 'f2-s4',
+        type: 'message',
+        title: 'Agradecimento',
+        content: 'Perfeito! Vou passar seu perfil para um especialista continuar o atendimento.',
+      },
+    ],
+  },
+  {
+    id: 'flow-3',
+    name: 'Pós-venda',
+    description: 'Acompanhamento após a assinatura do contrato.',
+    triggerLabel: '7 dias após assinatura do contrato',
+    isActive: false,
+    updatedAt: '15/02/2025',
+    steps: [
+      {
+        id: 'f3-s1',
+        type: 'message',
+        title: 'Checagem pós-venda',
+        content: 'Olá! Passando para saber como está sendo sua experiência com o novo imóvel.',
+      },
+      {
+        id: 'f3-s2',
+        type: 'question',
+        title: 'Nível de satisfação',
+        content: 'Como você avalia o atendimento até agora?',
+        options: [
+          { id: 'f3-s2-o1', label: 'Muito satisfeito', nextStepId: 'f3-s3' },
+          { id: 'f3-s2-o2', label: 'Preciso de suporte', nextStepId: 'f3-s4' },
+        ],
+      },
+      {
+        id: 'f3-s3',
+        type: 'message',
+        title: 'Agradecimento',
+        content: 'Que ótimo! Conte com a gente sempre que precisar. 😊',
+      },
+      {
+        id: 'f3-s4',
+        type: 'action',
+        title: 'Abrir chamado de suporte',
+        actionKind: 'transfer_agent',
+        actionDetail: 'Equipe de Suporte',
+      },
+      {
+        id: 'f3-s5',
+        type: 'action',
+        title: 'Encerrar atendimento',
+        actionKind: 'end_chat',
+      },
+    ],
+  },
+]

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
+import { toast } from 'sonner'
 import {
   User,
   Contact,
@@ -8,6 +9,12 @@ import {
   QuickReply,
   Automation,
   BusinessHours,
+  KanbanCard,
+  KanbanColumnId,
+  Flow,
+  FlowStep,
+  FlowOption,
+  TransferRecord,
 } from '@/types/chat'
 import {
   DEMO_USERS,
@@ -17,6 +24,8 @@ import {
   INITIAL_QUICK_REPLIES,
   INITIAL_AUTOMATIONS,
   INITIAL_BUSINESS_HOURS,
+  INITIAL_KANBAN_CARDS,
+  INITIAL_FLOWS,
 } from '@/data/mockData'
 
 interface ChatContextType {
@@ -63,6 +72,27 @@ interface ChatContextType {
 
   // Profile update
   updateCurrentUser: (updates: Partial<User>) => void
+
+  // Multi-atendimento (abas simultâneas + transferência)
+  openConversationIds: string[]
+  openConversation: (id: string) => void
+  closeConversationTab: (id: string) => void
+  transferConversation: (conversationId: string, toAgentId: string, reason?: string) => void
+  transfers: TransferRecord[]
+
+  // Kanban
+  kanbanCards: KanbanCard[]
+  moveKanbanCard: (cardId: string, toColumn: KanbanColumnId) => void
+
+  // Fluxos de atendimento
+  flows: Flow[]
+  toggleFlow: (flowId: string) => void
+  addFlowStep: (
+    flowId: string,
+    step: { type: FlowStep['type']; title: string; content?: string; actionDetail?: string },
+  ) => void
+  addFlowOption: (flowId: string, stepId: string, optionLabel: string) => void
+  deleteFlowStep: (flowId: string, stepId: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -77,6 +107,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>(INITIAL_QUICK_REPLIES)
   const [automations, setAutomations] = useState<Automation[]>(INITIAL_AUTOMATIONS)
   const [businessHours, setBusinessHours] = useState<BusinessHours>(INITIAL_BUSINESS_HOURS)
+  const [openConversationIds, setOpenConversationIds] = useState<string[]>(['conv-1'])
+  const [transfers, setTransfers] = useState<TransferRecord[]>([])
+  const [kanbanCards, setKanbanCards] = useState<KanbanCard[]>(INITIAL_KANBAN_CARDS)
+  const [flows, setFlows] = useState<Flow[]>(INITIAL_FLOWS)
 
   const login = (email: string) => {
     const found = DEMO_USERS.find(
@@ -214,6 +248,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const existing = conversations.find((c) => c.contactId === contact.id)
     if (existing) {
       setSelectedConversationId(existing.id)
+      setOpenConversationIds((prev) => (prev.includes(existing.id) ? prev : [...prev, existing.id]))
       return existing.id
     }
 
@@ -244,6 +279,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setConversations((prev) => [newConversation, ...prev])
     setSelectedConversationId(newConvId)
+    setOpenConversationIds((prev) => (prev.includes(newConvId) ? prev : [...prev, newConvId]))
     return newConvId
   }
 
@@ -316,6 +352,108 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser((prev) => (prev ? { ...prev, ...updates } : null))
   }
 
+  // ---------- Multi-atendimento ----------
+
+  const openConversation = (id: string) => {
+    setOpenConversationIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    setSelectedConversationId(id)
+    markAsRead(id)
+  }
+
+  const closeConversationTab = (id: string) => {
+    setOpenConversationIds((prev) => {
+      const next = prev.filter((c) => c !== id)
+      if (selectedConversationId === id) {
+        setSelectedConversationId(next[next.length - 1] ?? null)
+      }
+      return next
+    })
+  }
+
+  const transferConversation = (conversationId: string, toAgentId: string, reason?: string) => {
+    const target = DEMO_USERS.find((u) => u.id === toAgentId)
+    if (!target) return
+
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, assignedAgent: target.name } : c)),
+    )
+    setTransfers((prev) => [
+      ...prev,
+      {
+        id: `tr-${Date.now()}`,
+        conversationId,
+        fromAgent: currentUser?.name || 'Atendente',
+        toAgent: target.name,
+        reason: reason?.trim() || undefined,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      },
+    ])
+    toast.success(`Conversa transferida para ${target.name}.`)
+  }
+
+  // ---------- Kanban ----------
+
+  const moveKanbanCard = (cardId: string, toColumn: KanbanColumnId) => {
+    setKanbanCards((prev) =>
+      prev.map((card) => (card.id === cardId ? { ...card, columnId: toColumn } : card)),
+    )
+  }
+
+  // ---------- Fluxos ----------
+
+  const toggleFlow = (flowId: string) => {
+    setFlows((prev) => prev.map((f) => (f.id === flowId ? { ...f, isActive: !f.isActive } : f)))
+  }
+
+  const addFlowStep = (
+    flowId: string,
+    step: { type: FlowStep['type']; title: string; content?: string; actionDetail?: string },
+  ) => {
+    setFlows((prev) =>
+      prev.map((f) => {
+        if (f.id !== flowId) return f
+        const newStep: FlowStep = {
+          id: `step-${Date.now()}`,
+          type: step.type,
+          title: step.title,
+          content: step.content,
+          actionDetail: step.actionDetail,
+        }
+        return { ...f, steps: [...f.steps, newStep], updatedAt: 'Hoje' }
+      }),
+    )
+  }
+
+  const addFlowOption = (flowId: string, stepId: string, optionLabel: string) => {
+    setFlows((prev) =>
+      prev.map((f) => {
+        if (f.id !== flowId) return f
+        return {
+          ...f,
+          updatedAt: 'Hoje',
+          steps: f.steps.map((s) => {
+            if (s.id !== stepId) return s
+            const newOption: FlowOption = {
+              id: `opt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              label: optionLabel,
+            }
+            return { ...s, options: [...(s.options || []), newOption] }
+          }),
+        }
+      }),
+    )
+  }
+
+  const deleteFlowStep = (flowId: string, stepId: string) => {
+    setFlows((prev) =>
+      prev.map((f) =>
+        f.id === flowId
+          ? { ...f, updatedAt: 'Hoje', steps: f.steps.filter((s) => s.id !== stepId) }
+          : f,
+      ),
+    )
+  }
+
   return (
     <ChatContext.Provider
       value={{
@@ -348,6 +486,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         businessHours,
         updateBusinessHours,
         updateCurrentUser,
+        openConversationIds,
+        openConversation,
+        closeConversationTab,
+        transferConversation,
+        transfers,
+        kanbanCards,
+        moveKanbanCard,
+        flows,
+        toggleFlow,
+        addFlowStep,
+        addFlowOption,
+        deleteFlowStep,
       }}
     >
       {children}

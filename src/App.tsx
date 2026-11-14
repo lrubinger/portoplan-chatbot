@@ -9,6 +9,8 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import Index from './pages/Index'
 import Login from './pages/Login'
 import Inbox from './pages/Inbox'
+import Kanban from './pages/Kanban'
+import Flows from './pages/Flows'
 import InternalChat from './pages/InternalChat'
 import Contacts from './pages/Contacts'
 import Automations from './pages/Automations'
@@ -37,6 +39,8 @@ const App = () => (
               <Route path="/chat-interno" element={<InternalChat />} />
               <Route path="/contatos" element={<Contacts />} />
               <Route path="/automacoes" element={<Automations />} />
+              <Route path="/kanban" element={<Kanban />} />
+              <Route path="/fluxos" element={<Flows />} />
               <Route path="/configuracoes" element={<AppSettings />} />
             </Route>
           </Route>

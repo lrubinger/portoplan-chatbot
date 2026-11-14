@@ -10,12 +10,14 @@ import {
   LogOut,
   KanbanSquare,
   Workflow,
+  Shield,
 } from 'lucide-react'
+import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 
 export default function Layout() {
-  const { currentUser, logout, conversations, internalMessages } = useChat()
+  const { currentUser, logout, visibleConversations, internalMessages, isSuperAdmin } = useChat()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -30,8 +32,8 @@ export default function Layout() {
     )
   }
 
-  // Contagem de não lidos para badges
-  const unreadCount = conversations.reduce((acc, c) => acc + (c.unreadCount > 0 ? 1 : 0), 0)
+  // Contagem de não lidos para badges (apenas conversas visíveis ao nível logado)
+  const unreadCount = visibleConversations.reduce((acc, c) => acc + (c.unreadCount > 0 ? 1 : 0), 0)
 
   const handleLogout = () => {
     logout()
@@ -186,6 +188,29 @@ export default function Layout() {
               </TooltipContent>
             </Tooltip>
 
+            {/* Administração (apenas super administrador) */}
+            {isSuperAdmin && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to="/administracao"
+                    className={({ isActive }) =>
+                      `h-11 w-11 rounded-xl flex items-center justify-center transition ${
+                        isActive
+                          ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      }`
+                    }
+                  >
+                    <Shield className="h-5 w-5" />
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p className="text-xs font-semibold">Administração &amp; Acessos</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+
             {/* Configurações */}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -224,7 +249,9 @@ export default function Layout() {
             </TooltipTrigger>
             <TooltipContent side="right">
               <p className="text-xs font-semibold">{currentUser?.name}</p>
-              <p className="text-[10px] text-slate-400">{currentUser?.role}</p>
+              <p className="text-[10px] text-slate-400">
+                {currentUser ? ACCESS_LEVEL_LABELS[currentUser.accessLevel] : currentUser?.role}
+              </p>
             </TooltipContent>
           </Tooltip>
 

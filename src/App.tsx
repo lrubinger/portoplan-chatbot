@@ -5,7 +5,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ChatProvider } from '@/context/ChatContext'
 import Layout from './components/Layout'
-import { ProtectedRoute } from './components/ProtectedRoute'
+import { ProtectedRoute, SuperAdminRoute } from './components/ProtectedRoute'
 import Index from './pages/Index'
 import Login from './pages/Login'
 import Inbox from './pages/Inbox'
@@ -15,6 +15,7 @@ import InternalChat from './pages/InternalChat'
 import Contacts from './pages/Contacts'
 import Automations from './pages/Automations'
 import AppSettings from './pages/Settings'
+import Administration from './pages/Administration'
 import NotFound from './pages/NotFound'
 
 // ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
@@ -42,6 +43,9 @@ const App = () => (
               <Route path="/kanban" element={<Kanban />} />
               <Route path="/fluxos" element={<Flows />} />
               <Route path="/configuracoes" element={<AppSettings />} />
+              <Route element={<SuperAdminRoute />}>
+                <Route path="/administracao" element={<Administration />} />
+              </Route>
             </Route>
           </Route>
 

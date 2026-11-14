@@ -1,3 +1,21 @@
+export type AccessLevel = 'super_admin' | 'admin' | 'user'
+
+export const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
+  super_admin: 'Super Administrador',
+  admin: 'Administrador',
+  user: 'Usuário',
+}
+
+// Conversas privadas de um nível são visíveis por quem tem nível >= ele,
+// exceto quando o usuário está na lista de exceções (bloqueado) da conversa.
+export const ACCESS_LEVEL_RANK: Record<AccessLevel, number> = {
+  user: 1,
+  admin: 2,
+  super_admin: 3,
+}
+
+export const PRIVATE_LEVEL_ORDER: AccessLevel[] = ['user', 'admin', 'super_admin']
+
 export interface User {
   id: string
   name: string
@@ -5,6 +23,7 @@ export interface User {
   role: string
   avatar: string
   status: 'online' | 'busy' | 'offline'
+  accessLevel: AccessLevel
 }
 
 export interface Contact {
@@ -40,6 +59,17 @@ export interface Conversation {
   assignedAgent?: string
   tags: string[]
   messages: Message[]
+  // Conversa privada para um nível: só é visível a usuários com nível >= privateLevel
+  // (respeitando a lista de exceções/bloqueios configurada pelo super administrador).
+  privateLevel?: AccessLevel
+}
+
+// ---------- Administração / permissões ----------
+
+export interface UserPermissions {
+  userId: string
+  privateLevels: AccessLevel[] // níveis de conversa privada que este usuário pode ver
+  blockedUserIds: string[] // usuários cujas conversas este usuário não pode ver
 }
 
 export interface InternalMessage {
@@ -103,12 +133,7 @@ export interface TransferRecord {
 
 // ---------- Kanban ----------
 
-export type KanbanColumnId =
-  | 'novo'
-  | 'em-atendimento'
-  | 'aguardando-documentos'
-  | 'proposta-enviada'
-  | 'fechado'
+export type KanbanColumnId = string
 
 export interface KanbanCard {
   id: string
@@ -131,6 +156,17 @@ export interface KanbanColumn {
   accent: string
   dot: string
 }
+
+// Padrões de cor disponíveis ao criar/editar uma coluna nova
+export const KANBAN_COLUMN_STYLES: Pick<KanbanColumn, 'accent' | 'dot'>[] = [
+  { accent: 'border-t-sky-500', dot: 'bg-sky-500' },
+  { accent: 'border-t-emerald-500', dot: 'bg-emerald-500' },
+  { accent: 'border-t-amber-500', dot: 'bg-amber-500' },
+  { accent: 'border-t-violet-500', dot: 'bg-violet-500' },
+  { accent: 'border-t-slate-500', dot: 'bg-slate-500' },
+  { accent: 'border-t-rose-500', dot: 'bg-rose-500' },
+  { accent: 'border-t-indigo-500', dot: 'bg-indigo-500' },
+]
 
 // ---------- Atendimento por Fluxo ----------
 

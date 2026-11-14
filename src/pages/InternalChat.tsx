@@ -16,12 +16,25 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import type { Conversation } from '@/types/chat'
 
 export default function InternalChat() {
-  const { internalMessages, sendInternalMessage, currentUser } = useChat()
+  const { internalMessages, sendInternalMessage, currentUser, canSeeConversation } = useChat()
   const [inputText, setInputText] = useState('')
   const [activeChannel, setActiveChannel] = useState<'geral' | 'plantao' | 'suporte'>('geral')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Mensagens privadas (canais administracao/financeiro) só aparecem para quem tem permissão
+  const visibleInternalMessages = internalMessages.filter((msg) => {
+    if (!msg.channelId) return true
+    if (msg.channelId === 'administracao' || msg.channelId === 'financeiro') {
+      return canSeeConversation({
+        id: `internal-${msg.channelId}`,
+        privateLevel: msg.channelId === 'financeiro' ? 'super_admin' : 'admin',
+      } as Conversation)
+    }
+    return true
+  })
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -236,7 +249,7 @@ export default function InternalChat() {
             </span>
           </div>
 
-          {internalMessages.map((msg) => {
+          {visibleInternalMessages.map((msg) => {
             const isMe = msg.senderId === currentUser?.id
 
             return (

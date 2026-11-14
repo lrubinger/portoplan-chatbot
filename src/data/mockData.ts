@@ -10,6 +10,7 @@ import {
   KanbanColumn,
   KanbanColumnId,
   Flow,
+  UserPermissions,
 } from '@/types/chat'
 // Flow import used below in INITIAL_FLOWS
 
@@ -18,17 +19,19 @@ export const DEMO_USERS: User[] = [
     id: 'user-1',
     name: 'Ana Paula Costa',
     email: 'ana.costa@portoplan.com.br',
-    role: 'Atendente Sênior',
+    role: 'Super Administradora',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=12',
     status: 'online',
+    accessLevel: 'super_admin',
   },
   {
     id: 'user-2',
     name: 'Carlos Oliveira',
     email: 'carlos.oliveira@portoplan.com.br',
-    role: 'Supervisor de Atendimento',
+    role: 'Administrador / Supervisor',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=42',
     status: 'online',
+    accessLevel: 'admin',
   },
   {
     id: 'user-3',
@@ -37,6 +40,7 @@ export const DEMO_USERS: User[] = [
     role: 'Atendente de Suporte',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=88',
     status: 'busy',
+    accessLevel: 'user',
   },
   {
     id: 'user-4',
@@ -45,7 +49,17 @@ export const DEMO_USERS: User[] = [
     role: 'Especialista em Financiamento',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=27',
     status: 'offline',
+    accessLevel: 'user',
   },
+]
+
+// Permissões iniciais por usuário: administrador já enxerga conversas privadas
+// de administrador; usuários comuns não veem nenhuma privada por padrão.
+export const INITIAL_USER_PERMISSIONS: UserPermissions[] = [
+  { userId: 'user-1', privateLevels: ['user', 'admin', 'super_admin'], blockedUserIds: [] },
+  { userId: 'user-2', privateLevels: ['admin'], blockedUserIds: [] },
+  { userId: 'user-3', privateLevels: [], blockedUserIds: [] },
+  { userId: 'user-4', privateLevels: [], blockedUserIds: [] },
 ]
 
 export const INITIAL_CONTACTS: Contact[] = [
@@ -250,7 +264,8 @@ export const INITIAL_CONVERSATIONS: Conversation[] = [
     unreadCount: 0,
     isResolved: false,
     assignedAgent: 'Mariana Duarte',
-    tags: ['Comercial', 'Studio'],
+    tags: ['Comercial', 'Studio', 'Privada Admin'],
+    privateLevel: 'admin',
     messages: [
       {
         id: 'm-4-1',
@@ -273,6 +288,44 @@ export const INITIAL_CONVERSATIONS: Conversation[] = [
         text: 'Qual a previsão de entrega do Studio Central?',
         timestamp: 'Ontem 14:30',
         status: 'read',
+      },
+    ],
+  },
+  {
+    id: 'conv-6',
+    contactId: 'c-6',
+    contactName: 'Eduardo Guimarães',
+    contactPhone: '+55 61 98234-5566',
+    contactAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=62',
+    lastMessage: 'Ana, posso divulgar a condição especial para a diretoria?',
+    lastMessageTime: '11:30',
+    unreadCount: 1,
+    isResolved: false,
+    assignedAgent: 'Ana Paula Costa',
+    tags: ['Financeiro', 'Privada Super Admin'],
+    privateLevel: 'super_admin',
+    messages: [
+      {
+        id: 'm-6-1',
+        sender: 'contact',
+        text: 'Ana, bom dia! Fechamos a proposta da unidade 1202 do Jardins do Porto. Conseguem liberar o desconto de 6% na tabela?',
+        timestamp: '11:20',
+        status: 'read',
+      },
+      {
+        id: 'm-6-2',
+        sender: 'agent',
+        senderName: 'Ana Paula Costa',
+        text: 'Bom dia, Eduardo! Vou alinhar essa condição financeira com a diretoria — esta conversa é confidencial (dados de tabela e comissão).',
+        timestamp: '11:28',
+        status: 'read',
+      },
+      {
+        id: 'm-6-3',
+        sender: 'contact',
+        text: 'Ana, posso divulgar a condição especial para a diretoria?',
+        timestamp: '11:30',
+        status: 'delivered',
       },
     ],
   },
@@ -355,6 +408,24 @@ export const INITIAL_INTERNAL_MESSAGES: InternalMessage[] = [
     senderAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=12',
     text: 'Eu posso cobrir sim, Mari! Deixa comigo.',
     timestamp: '10:04',
+  },
+  {
+    id: 'im-6',
+    senderId: 'user-1',
+    senderName: 'Ana Paula Costa',
+    senderAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=12',
+    text: '🔒 Financeiro (Super Admin): fechamos o desconto de 6% com o Eduardo Guimarães — unidade 1202. Não divulguem a condição nas outras conversas.',
+    timestamp: '11:35',
+    channelId: 'financeiro',
+  },
+  {
+    id: 'im-7',
+    senderId: 'user-2',
+    senderName: 'Carlos Oliveira',
+    senderAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=42',
+    text: '🔒 Administração: equipe, a revisão da comissão dos corretores sai na próxima reunião de líderes.',
+    timestamp: '11:40',
+    channelId: 'administracao',
   },
 ]
 
@@ -464,6 +535,7 @@ export const INITIAL_BUSINESS_HOURS: BusinessHours = {
 
 // ---------- Kanban ----------
 
+// Colunas iniciais do Kanban (mutáveis em execução via ChatContext)
 export const KANBAN_COLUMNS: KanbanColumn[] = [
   { id: 'novo', title: 'Novo contato', accent: 'border-t-sky-500', dot: 'bg-sky-500' },
   {

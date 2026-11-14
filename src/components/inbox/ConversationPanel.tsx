@@ -11,7 +11,9 @@ import {
   MoreVertical,
   UserCog,
   X,
+  Lock,
 } from 'lucide-react'
+import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -126,6 +128,15 @@ export default function ConversationPanel({ conversationId, onClose }: Conversat
               <h2 className="text-sm font-bold text-slate-900 truncate">
                 {conversation.contactName}
               </h2>
+              {conversation.privateLevel && (
+                <Badge
+                  variant="outline"
+                  className="bg-violet-50 text-violet-700 border-violet-200 text-[10px] gap-1"
+                >
+                  <Lock className="h-3 w-3" />
+                  {ACCESS_LEVEL_LABELS[conversation.privateLevel]}
+                </Badge>
+              )}
               {conversation.isResolved ? (
                 <Badge
                   variant="outline"

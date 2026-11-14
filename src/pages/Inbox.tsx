@@ -10,7 +10,9 @@ import {
   MessageSquareOff,
   X,
   Columns2,
+  Lock,
 } from 'lucide-react'
+import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -18,7 +20,7 @@ import ConversationPanel from '@/components/inbox/ConversationPanel'
 
 export default function Inbox() {
   const {
-    conversations,
+    visibleConversations,
     selectedConversationId,
     openConversationIds,
     openConversation,
@@ -30,7 +32,7 @@ export default function Inbox() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterTab, setFilterTab] = useState<'all' | 'unread' | 'resolved'>('all')
 
-  const filteredConversations = conversations.filter((conv) => {
+  const filteredConversations = visibleConversations.filter((conv) => {
     const matchesSearch =
       conv.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       conv.contactPhone.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -42,9 +44,9 @@ export default function Inbox() {
     return !conv.isResolved
   })
 
-  const unreadTotal = conversations.reduce((acc, c) => acc + (c.unreadCount > 0 ? 1 : 0), 0)
+  const unreadTotal = visibleConversations.reduce((acc, c) => acc + (c.unreadCount > 0 ? 1 : 0), 0)
   const openConversations = openConversationIds
-    .map((id) => conversations.find((c) => c.id === id))
+    .map((id) => visibleConversations.find((c) => c.id === id))
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
   const activeTab = selectedConversationId ?? openConversations[0]?.id ?? null
 
@@ -162,20 +164,33 @@ export default function Inbox() {
 
                   {/* Detalhes */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span
-                        className={`text-sm truncate font-semibold ${
-                          isSelected ? 'text-emerald-950' : 'text-slate-800'
-                        }`}
-                      >
-                        {conv.contactName}
-                      </span>
+                    <div className="flex items-center justify-between mb-0.5 gap-2">
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span
+                          className={`text-sm truncate font-semibold ${
+                            isSelected ? 'text-emerald-950' : 'text-slate-800'
+                          }`}
+                        >
+                          {conv.contactName}
+                        </span>
+                        {conv.privateLevel && (
+                          <Lock
+                            className="h-3 w-3 text-violet-600 shrink-0"
+                            title={ACCESS_LEVEL_LABELS[conv.privateLevel]}
+                          />
+                        )}
+                      </div>
                       <span className="text-[11px] text-slate-400 shrink-0">
                         {conv.lastMessageTime}
                       </span>
                     </div>
 
                     <p className="text-xs text-slate-500 truncate mb-1.5">{conv.lastMessage}</p>
+                    {conv.privateLevel && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200 font-medium">
+                        🔒 {ACCESS_LEVEL_LABELS[conv.privateLevel]}
+                      </span>
+                    )}
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1 flex-wrap">

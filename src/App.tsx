@@ -17,6 +17,7 @@ import Automations from './pages/Automations'
 import AppSettings from './pages/Settings'
 import Administration from './pages/Administration'
 import NotFound from './pages/NotFound'
+import RealInboxPilot from './pages/RealInboxPilot'
 
 // ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
 // AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
@@ -28,6 +29,8 @@ const App = () => (
         <Toaster />
         <Sonner position="top-right" richColors />
         <Routes>
+          {/* Piloto isolado: autenticação e Inbox do backend real */}
+          <Route path="/integracao-v2" element={<RealInboxPilot />} />
           {/* Rota pública de login */}
           <Route path="/login" element={<Login />} />
 

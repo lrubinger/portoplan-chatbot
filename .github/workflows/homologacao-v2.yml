@@ -1,0 +1,81 @@
+name: Preparar homologacao PortoPlan BOT V2
+
+# Exclusivamente manual. Este workflow NAO altera Nginx, backend ou producao.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portoplan-v2-staging
+  cancel-in-progress: false
+
+jobs:
+  build-and-stage:
+    if: github.ref == 'refs/heads/integracao-v2'
+    runs-on: ubuntu-latest
+    environment: homologacao-v2
+    steps:
+      - name: Checkout da branch V2
+        uses: actions/checkout@v4
+
+      - name: Preparar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10'
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Compilar para /v2/
+        env:
+          VITE_APP_BASE_PATH: /v2/
+          VITE_PORTOPLAN_API_URL: /api
+        run: pnpm build
+
+      - name: Verificar arquivos compilados
+        run: |
+          test -s dist/index.html
+          grep -q '/v2/' dist/index.html
+          test -d dist/assets
+
+      - name: Preparar SSH de homologacao
+        env:
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+        run: |
+          set -eu
+          test -n "$STAGING_SSH_KEY"
+          test -n "$STAGING_HOST"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$STAGING_SSH_KEY" > ~/.ssh/portoplan_v2
+          chmod 600 ~/.ssh/portoplan_v2
+          ssh-keygen -y -f ~/.ssh/portoplan_v2 >/dev/null
+          ssh-keyscan -H "$STAGING_HOST" >> ~/.ssh/known_hosts
+
+      - name: Enviar apenas arquivos estaticos da V2
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_USER: ${{ secrets.STAGING_USER }}
+        run: |
+          set -eu
+          test -n "$STAGING_USER"
+          ssh -i ~/.ssh/portoplan_v2 -o IdentitiesOnly=yes "$STAGING_USER@$STAGING_HOST" \
+            'mkdir -p /var/www/portoplan-bot-v2'
+          rsync -az --delete \
+            -e "ssh -i $HOME/.ssh/portoplan_v2 -o IdentitiesOnly=yes" \
+            dist/ "$STAGING_USER@$STAGING_HOST:/var/www/portoplan-bot-v2/"
+
+      - name: Resumo
+        run: |
+          echo "Arquivos V2 enviados somente para /var/www/portoplan-bot-v2"
+          echo "Nenhuma alteracao em /var/www/portoplan-bot, backend, banco, Nginx ou WhatsApp"
+          echo "A rota /v2 requer configuracao Nginx separada, revisada manualmente"

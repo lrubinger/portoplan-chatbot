@@ -1,8 +1,8 @@
 /**
- * PortoPlan V2 API adapter. The Vite proxy /api must target the existing backend.
+ * PortoPlan V2 API adapter. The backend exposes routes at root; configure a same-origin reverse proxy for production.
  * Never put service tokens or secrets in VITE_* variables.
  */
-const API_BASE = (import.meta.env.VITE_PORTOPLAN_API_URL || '/api').replace(/\/$/, '')
+const API_BASE = (import.meta.env.VITE_PORTOPLAN_API_URL || '').replace(/\/$/, '')
 let accessToken: string | null = null
 
 export type BackendUser = {

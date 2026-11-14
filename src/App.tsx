@@ -22,8 +22,10 @@ import RealInboxPilot from './pages/RealInboxPilot'
 // ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
 // AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
 
+const appBase = import.meta.env.VITE_APP_BASE_PATH || '/'
+
 const App = () => (
-  <BrowserRouter>
+  <BrowserRouter basename={appBase}>
     <TooltipProvider>
       <ChatProvider>
         <Toaster />
@@ -31,6 +33,7 @@ const App = () => (
         <Routes>
           {/* Piloto isolado: autenticação e Inbox do backend real */}
           <Route path="/integracao-v2" element={<RealInboxPilot />} />
+          {appBase !== '/' && <Route path="/" element={<RealInboxPilot />} />}
           {/* Rota pública de login */}
           <Route path="/login" element={<Login />} />
 

@@ -1,6 +1,6 @@
 name: Preparar homologacao PortoPlan BOT V2
 
-# Exclusivamente manual. Este workflow NAO altera Nginx, backend ou producao.
+# Exclusivamente manual. Este workflow publica SOMENTE em /var/www/portoplan-bot/v2 e NAO altera Nginx ou backend.
 on:
   workflow_dispatch:
 
@@ -50,6 +50,7 @@ jobs:
         env:
           STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
           STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
         run: |
           set -eu
           test -n "$STAGING_SSH_KEY"
@@ -59,7 +60,7 @@ jobs:
           printf '%s\n' "$STAGING_SSH_KEY" > ~/.ssh/portoplan_v2
           chmod 600 ~/.ssh/portoplan_v2
           ssh-keygen -y -f ~/.ssh/portoplan_v2 >/dev/null
-          ssh-keyscan -H "$STAGING_HOST" >> ~/.ssh/known_hosts
+          test -n "$STAGING_KNOWN_HOSTS"\n          printf '%s\\n' "$STAGING_KNOWN_HOSTS" >> ~/.ssh/known_hosts
 
       - name: Enviar apenas arquivos estaticos da V2
         env:
@@ -69,13 +70,13 @@ jobs:
           set -eu
           test -n "$STAGING_USER"
           ssh -i ~/.ssh/portoplan_v2 -o IdentitiesOnly=yes "$STAGING_USER@$STAGING_HOST" \
-            'mkdir -p /var/www/portoplan-bot-v2'
+            'mkdir -p /var/www/portoplan-bot/v2 && test -d /var/www/portoplan-bot && test -f /var/www/portoplan-bot/index.html'
           rsync -az --delete \
             -e "ssh -i $HOME/.ssh/portoplan_v2 -o IdentitiesOnly=yes" \
-            dist/ "$STAGING_USER@$STAGING_HOST:/var/www/portoplan-bot-v2/"
+            dist/ "$STAGING_USER@$STAGING_HOST:/var/www/portoplan-bot/v2/"
 
       - name: Resumo
         run: |
-          echo "Arquivos V2 enviados somente para /var/www/portoplan-bot-v2"
+          echo "Arquivos V2 enviados somente para /var/www/portoplan-bot/v2"
           echo "Nenhuma alteracao em /var/www/portoplan-bot, backend, banco, Nginx ou WhatsApp"
-          echo "A rota /v2 requer configuracao Nginx separada, revisada manualmente"
+          echo "Verificar fallback SPA para /v2/ no Nginx antes de validar rotas internas"

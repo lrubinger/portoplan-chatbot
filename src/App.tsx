@@ -1,0 +1,51 @@
+/* Main App Component - Handles routing (using react-router-dom), query client and other providers - use this file to add all routes */
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from '@/components/ui/toaster'
+import { Toaster as Sonner } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ChatProvider } from '@/context/ChatContext'
+import Layout from './components/Layout'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import Index from './pages/Index'
+import Login from './pages/Login'
+import Inbox from './pages/Inbox'
+import InternalChat from './pages/InternalChat'
+import Contacts from './pages/Contacts'
+import Automations from './pages/Automations'
+import AppSettings from './pages/Settings'
+import NotFound from './pages/NotFound'
+
+// ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
+// AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
+
+const App = () => (
+  <BrowserRouter>
+    <TooltipProvider>
+      <ChatProvider>
+        <Toaster />
+        <Sonner position="top-right" richColors />
+        <Routes>
+          {/* Rota pública de login */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Rotas no Layout com Sidebar */}
+          <Route element={<Layout />}>
+            <Route path="/" element={<Index />} />
+
+            <Route element={<ProtectedRoute />}>
+              <Route path="/inbox" element={<Inbox />} />
+              <Route path="/chat-interno" element={<InternalChat />} />
+              <Route path="/contatos" element={<Contacts />} />
+              <Route path="/automacoes" element={<Automations />} />
+              <Route path="/configuracoes" element={<AppSettings />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ChatProvider>
+    </TooltipProvider>
+  </BrowserRouter>
+)
+
+export default App

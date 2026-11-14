@@ -174,10 +174,9 @@ export default function Inbox() {
                           {conv.contactName}
                         </span>
                         {conv.privateLevel && (
-                          <Lock
-                            className="h-3 w-3 text-violet-600 shrink-0"
-                            title={ACCESS_LEVEL_LABELS[conv.privateLevel]}
-                          />
+                          <span title={ACCESS_LEVEL_LABELS[conv.privateLevel]}>
+                            <Lock className="h-3 w-3 text-violet-600 shrink-0" />
+                          </span>
                         )}
                       </div>
                       <span className="text-[11px] text-slate-400 shrink-0">

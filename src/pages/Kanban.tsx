@@ -106,7 +106,7 @@ export default function Kanban() {
     setEditingCardId(card.id)
     setCardForm({
       contactName: card.contactName,
-      value: card.value.replace(/[^\d,]/g, ''),
+      value: (card.dealValue ?? '').replace(/[^\d,]/g, ''),
       tags: card.tags.join(', '),
       phone: card.phone,
       columnId: card.columnId,
@@ -122,8 +122,10 @@ export default function Kanban() {
     }
 
     const payload = {
+      contactId: '',
       contactName: cardForm.contactName.trim(),
-      value: cardForm.value.trim() ? `R$ ${cardForm.value.trim()}` : 'R$ 0',
+      summary: '',
+      dealValue: cardForm.value.trim() ? `R$ ${cardForm.value.trim()}` : 'R$ 0',
       tags: cardForm.tags
         .split(',')
         .map((t) => t.trim())
@@ -317,7 +319,7 @@ export default function Kanban() {
 
               <div className="flex items-center justify-between text-[11px]">
                 <span className="font-semibold text-emerald-700 flex items-center gap-1">
-                  <DollarSign className="h-3 w-3" /> {card.value}
+                  <DollarSign className="h-3 w-3" /> {card.dealValue ?? 'R$ 0'}
                 </span>
                 <span
                   className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium ${idleLevelClass(card.idleLevel)}`}

@@ -96,6 +96,7 @@ interface ChatContextType {
     userId: string,
     data: { accessLevel: AccessLevel; privateLevels: AccessLevel[] },
   ) => void
+  toggleUserBlocked: (userId: string, blockedId: string) => void
   isSuperAdmin: boolean
 
   // Kanban

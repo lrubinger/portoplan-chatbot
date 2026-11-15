@@ -6,6 +6,7 @@ import {
   User,
   Zap,
   Clock,
+  QrCode,
   Plus,
   Trash2,
   Edit2,
@@ -14,6 +15,7 @@ import {
   ShieldCheck,
   Save,
 } from 'lucide-react'
+import WhatsappConnectionSection from '@/components/settings/WhatsappConnectionSection'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -174,6 +176,12 @@ export default function AppSettings() {
               className="text-xs gap-1.5 data-[state=active]:bg-slate-100"
             >
               <Clock className="h-4 w-4" /> Horário de Atendimento
+            </TabsTrigger>
+            <TabsTrigger
+              value="whatsapp-connection"
+              className="text-xs gap-1.5 data-[state=active]:bg-slate-100"
+            >
+              <QrCode className="h-4 w-4" /> Conexão do WhatsApp
             </TabsTrigger>
           </TabsList>
 
@@ -499,6 +507,11 @@ export default function AppSettings() {
                 </div>
               </form>
             </div>
+          </TabsContent>
+
+          {/* Tab 4: Conexão do WhatsApp */}
+          <TabsContent value="whatsapp-connection">
+            <WhatsappConnectionSection />
           </TabsContent>
         </Tabs>
       </div>

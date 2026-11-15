@@ -15,9 +15,13 @@ import InternalChat from './pages/InternalChat'
 import Contacts from './pages/Contacts'
 import Automations from './pages/Automations'
 import AppSettings from './pages/Settings'
-import WhatsappConnection from './pages/WhatsappConnection'
 import Administration from './pages/Administration'
 import NotFound from './pages/NotFound'
+
+// Redirecionamento de links antigos: /conexao agora vive na aba de Configurações
+function ConexaoRedirect() {
+  return <Navigate to="/configuracoes" replace />
+}
 
 // ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
 // AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
@@ -44,7 +48,7 @@ const App = () => (
               <Route path="/kanban" element={<Kanban />} />
               <Route path="/fluxos" element={<Flows />} />
               <Route path="/configuracoes" element={<AppSettings />} />
-              <Route path="/conexao" element={<WhatsappConnection />} />
+              <Route path="/conexao" element={<ConexaoRedirect />} />
               <Route element={<SuperAdminRoute />}>
                 <Route path="/administracao" element={<Administration />} />
               </Route>

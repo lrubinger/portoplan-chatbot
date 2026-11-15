@@ -88,7 +88,13 @@ export const portoPlanApi = {
     return request<{ records: Array<{ id: number; shortcode: string; message: string }>; hasMore: boolean }>('/quick-messages')
   },
   internalChatContacts() {
-    return request<unknown>('/internal-chat/contacts')
+    return request<Array<{ id: number; name: string; email?: string; unread?: number; lastMessage?: string }>>('/internal-chat/contacts')
+  },
+  internalChatMessages(userId: number) {
+    return request<Array<{ id: number; senderId: number; recipientId: number; body: string; createdAt: string }>>(`/internal-chat/messages/${userId}`)
+  },
+  sendInternalMessage(userId: number, body: string) {
+    return request<void>(`/internal-chat/messages/${userId}`, { method: 'POST', body: JSON.stringify({ body }) })
   },
   kanban() {
     return request<unknown>('/ticket/kanban')

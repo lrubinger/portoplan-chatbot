@@ -14,7 +14,7 @@ export default function RealInternalChat() {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    portoPlanApi.internalChatContacts().then(setColleagues).catch(() => setError('Não foi possível carregar os usuários autorizados. Faça login no Inbox primeiro.'))
+    portoPlanApi.refresh().then(() => portoPlanApi.internalChatContacts()).then(setColleagues).catch(() => setError('Sessão expirada ou falha ao carregar usuários. Entre novamente pelo Inbox.'))
   }, [])
 
   async function open(person: Colleague) {

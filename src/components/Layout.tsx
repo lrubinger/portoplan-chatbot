@@ -15,9 +15,19 @@ import {
 import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 export default function Layout() {
-  const { currentUser, logout, visibleConversations, internalMessages, isSuperAdmin } = useChat()
+  const {
+    currentUser,
+    logout,
+    visibleConversations,
+    internalMessages,
+    isSuperAdmin,
+    whatsappConnection,
+  } = useChat()
+  const waConnected = whatsappConnection.status === 'connected'
+  const waWaiting = whatsappConnection.status === 'waiting'
   const navigate = useNavigate()
   const location = useLocation()
 

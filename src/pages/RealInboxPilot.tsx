@@ -186,6 +186,7 @@ export default function RealInboxPilot() {
           <button onClick={()=>{setConnectionOpen(false);window.history.replaceState(null, "", "/v2/inbox")}} className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center" title="WhatsApp Inbox"><MessageSquare size={21}/></button>
           
           <Link to="/chat-interno" className="h-11 w-11 rounded-xl text-white flex items-center justify-center hover:bg-slate-700" title="Chat interno"><Users size={21}/></Link>
+          <Link to="/contatos" className="h-11 w-11 rounded-xl text-white flex items-center justify-center hover:bg-slate-700" title="Contatos"><Contact size={21}/></Link>
           {[
             
             { icon: KanbanSquare, label: 'Kanban' }, { icon: Workflow, label: 'Fluxos' },

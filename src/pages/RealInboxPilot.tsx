@@ -21,6 +21,9 @@ export default function RealInboxPilot() {
   const [connections, setConnections] = useState<BackendWhatsappConnection[]>([])
   const [connectionBusy, setConnectionBusy] = useState(false)
   const [connectionError, setConnectionError] = useState('')
+  const [team, setTeam] = useState<Array<{id:number;name:string}>>([])
+  const [transferOpen, setTransferOpen] = useState(false)
+  const [quickReplies, setQuickReplies] = useState<Array<{id:number;shortcode:string;message:string}>>([])
 
   async function refreshConnections() {
     try {
@@ -91,6 +94,42 @@ export default function RealInboxPilot() {
     } catch { setError('Não foi possível abrir esta conversa.') }
     finally { setBusy(false) }
   }
+
+  async function resolveSelected() {
+    if (!selected || busy || !window.confirm('Resolver este atendimento?')) return
+    setBusy(true)
+    try {
+      await portoPlanApi.updateTicket(selected.id, { status: 'closed' })
+      setSelected(null); setMessages([])
+      await loadTickets()
+    } catch { setError('Não foi possível resolver o atendimento no servidor.') }
+    finally { setBusy(false) }
+  }
+
+  async function openTransfer() {
+    if (!selected) return
+    setTransferOpen(true)
+    try {
+      const users = await portoPlanApi.users()
+      setTeam(Array.isArray(users) ? users : [])
+    } catch { setError('Não foi possível carregar os atendentes autorizados.') }
+  }
+
+  async function transferSelected(userId: number) {
+    if (!selected || busy) return
+    setBusy(true)
+    try {
+      const updated = await portoPlanApi.updateTicket(selected.id, { userId })
+      setSelected(updated); setTransferOpen(false)
+      await loadTickets()
+    } catch { setError('Não foi possível transferir este atendimento.') }
+    finally { setBusy(false) }
+  }
+
+  useEffect(() => {
+    if (!user) return
+    portoPlanApi.quickMessages().then(data => setQuickReplies(data.records || [])).catch(() => {})
+  }, [user])
 
   async function send(e: FormEvent) {
     e.preventDefault()
@@ -197,13 +236,17 @@ export default function RealInboxPilot() {
           <div className="h-12 bg-white border-b px-5 flex items-center text-sm font-semibold">{contactName(selected)} <span className="ml-3 text-xs text-slate-400 font-normal">{selected.contact?.number}</span></div>
           <div className="h-16 bg-white border-b px-5 flex items-center justify-between gap-2">
             <div><h2 className="font-bold text-sm">{contactName(selected)} <span className="ml-2 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1 rounded-full text-[10px]">{selected.status==='closed'?'Resolvido':'Em atendimento'}</span></h2><p className="text-xs text-slate-500 mt-1">Atendente: {selected.user?.name || user.name}</p></div>
-            <span className="text-xs text-slate-400 flex items-center gap-1"><LockKeyhole size={13}/> Ações adicionais em integração</span>
+            <div className="flex items-center gap-2">
+              <button type="button" disabled={busy} onClick={()=>void openTransfer()} className="border rounded-lg px-3 py-2 text-xs hover:bg-slate-50 disabled:opacity-40">Transferir</button>
+              <button type="button" disabled={busy || selected.status==='closed'} onClick={()=>void resolveSelected()} className="bg-emerald-600 text-white rounded-lg px-3 py-2 text-xs disabled:opacity-40">Resolver</button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]">
             {messages.map(message => <div key={message.id} className={`flex ${message.fromMe?'justify-end':'justify-start'}`}><div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm ${message.fromMe?'bg-[#d9fdd3]':'bg-white border'}`}><p className="whitespace-pre-wrap">{message.body}</p><div className="flex justify-end gap-1 mt-2 text-[10px] text-slate-400">{formatTime(message.createdAt)}{message.fromMe && <CheckCheck size={13}/>}</div></div></div>)}
             {messages.length===0 && <p className="text-center text-xs text-slate-500">Nenhuma mensagem retornada pelo backend.</p>}
           </div>
-          <div className="bg-white border-t px-4 py-2 text-xs text-slate-400">Respostas rápidas e transferência: aguardando integração real</div>
+          {transferOpen && <div className="bg-white border-t px-4 py-3 text-sm space-y-2"><div className="flex justify-between"><strong>Transferir atendimento</strong><button type="button" onClick={()=>setTransferOpen(false)}>Cancelar</button></div><div className="flex gap-2 flex-wrap">{team.map(member => <button type="button" key={member.id} disabled={busy} onClick={()=>void transferSelected(member.id)} className="border rounded-lg px-3 py-2 hover:bg-slate-50">{member.name}</button>)}</div>{team.length===0 && <p className="text-slate-500">Nenhum atendente disponível.</p>}</div>}
+          {quickReplies.length>0 && <div className="bg-white border-t px-4 py-2 flex items-center gap-2 overflow-x-auto text-xs"><span className="shrink-0 text-slate-500">Respostas rápidas:</span>{quickReplies.map(reply=><button type="button" key={reply.id} onClick={()=>setDraft(reply.message)} className="shrink-0 rounded-full border bg-slate-50 px-3 py-1.5 hover:bg-emerald-50">{reply.shortcode}</button>)}</div>}
           <form onSubmit={send} className="p-3 bg-white border-t flex gap-2">
             <input className="flex-1 bg-slate-50 border rounded-lg p-3 text-sm" value={draft} onChange={e=>setDraft(e.target.value)} placeholder={`Responder no WhatsApp como ${user.name}...`}/>
             <button disabled={busy || !draft.trim() || selected.status==='closed'} className="bg-emerald-600 text-white rounded-lg px-5 disabled:opacity-40 flex items-center gap-2"><Send size={17}/> Enviar</button>

@@ -19,6 +19,7 @@ import {
   AccessLevel,
   ACCESS_LEVEL_RANK,
   UserPermissions,
+  WhatsappConnection,
 } from '@/types/chat'
 import {
   DEMO_USERS,
@@ -34,6 +35,7 @@ import {
   INITIAL_FLOWS,
 } from '@/data/mockData'
 import { KANBAN_COLUMN_STYLES } from '@/types/chat'
+import { pickContactPhoneFromPayload } from '@/lib/phone'
 
 interface ChatContextType {
   currentUser: User | null
@@ -118,6 +120,14 @@ interface ChatContextType {
     moveTo?: KanbanColumnId,
   ) => void
 
+  // Conexão do WhatsApp (QR code — pareamento simulado)
+  whatsappConnection: WhatsappConnection
+  qrPayload: string
+  startWhatsappPairing: () => void
+  refreshWhatsappQr: () => void
+  completeWhatsappPairing: () => void
+  disconnectWhatsapp: () => void
+
   // Fluxos de atendimento
   flows: Flow[]
   toggleFlow: (flowId: string) => void
@@ -149,6 +159,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userPermissions, setUserPermissions] =
     useState<UserPermissions[]>(INITIAL_USER_PERMISSIONS)
   const [flows, setFlows] = useState<Flow[]>(INITIAL_FLOWS)
+  const [whatsappConnection, setWhatsappConnection] = useState<WhatsappConnection>({
+    status: 'disconnected',
+  })
+  // Gera um payload de QR de exemplo (simulação — na integração real viria da API).
+  const generateQrPayload = () =>
+    `portoplan-wa://${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`
+  const [qrPayload, setQrPayload] = useState<string>(generateQrPayload)
 
   const isSuperAdmin = currentUser?.accessLevel === 'super_admin'
 
@@ -293,6 +310,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const now = new Date()
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
+    // Ponto de ingestão: quando a integração real entregar o payload da API,
+    // este mesmo caminho resolve o telefone do remetente priorizando
+    // `senderPn` (número real) sobre o JID/LID cru.
+    const ingestedPhone = pickContactPhoneFromPayload({
+      senderPn: undefined,
+      participantAlt: undefined,
+      senderJid: conversations.find((c) => c.id === conversationId)?.contactPhone,
+    })
+
     const newMsg: Message = {
       id: `m-client-${Date.now()}`,
       sender: 'contact',
@@ -311,6 +337,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             unreadCount: c.id === selectedConversationId ? 0 : c.unreadCount + 1,
             isResolved: false,
             messages: [...c.messages, newMsg],
+            // Ingestão: se o payload trouxer um número real (senderPn),
+            // o contato passa a exibi-lo no lugar do identificador cru.
+            contactPhone: ingestedPhone || c.contactPhone,
           }
         }
         return c
@@ -646,6 +675,42 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     )
   }
 
+  // ---------- Conexão do WhatsApp (pareamento simulado) ----------
+
+  // Gera um novo QR e entra em "aguardando leitura" (~40s de validade).
+  const startWhatsappPairing = React.useCallback(() => {
+    setWhatsappConnection({ status: 'waiting' })
+    setQrPayload(generateQrPayload())
+  }, [])
+
+  const refreshWhatsappQr = React.useCallback(() => {
+    setQrPayload(generateQrPayload())
+  }, [])
+
+  // Simula a leitura do QR pelo celular: aguardando -> conectado após 1,5s.
+  const completeWhatsappPairing = React.useCallback(() => {
+    setWhatsappConnection((prev) => {
+      if (prev.status === 'connected') return prev
+      window.setTimeout(() => {
+        const now = new Date()
+        setWhatsappConnection({
+          status: 'connected',
+          phone: '+55 11 98765-4321',
+          device: 'Chrome (Windows)',
+          connectedAt: now.toISOString(),
+        })
+        toast.success('WhatsApp conectado com sucesso.')
+      }, 1500)
+      return { status: 'waiting' }
+    })
+  }, [])
+
+  const disconnectWhatsapp = React.useCallback(() => {
+    setWhatsappConnection({ status: 'disconnected' })
+    setQrPayload(generateQrPayload())
+    toast.info('Sessão do WhatsApp encerrada.')
+  }, [])
+
   return (
     <ChatContext.Provider
       value={{
@@ -704,6 +769,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addFlowStep,
         addFlowOption,
         deleteFlowStep,
+        whatsappConnection,
+        qrPayload,
+        startWhatsappPairing,
+        refreshWhatsappQr,
+        completeWhatsappPairing,
+        disconnectWhatsapp,
       }}
     >
       {children}

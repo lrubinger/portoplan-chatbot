@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Bot, MessageSquare, Users, Contact, KanbanSquare, Workflow, Shield, Settings, LogOut, Search, RefreshCw, Send, CheckCheck, LockKeyhole } from 'lucide-react'
-import { portoPlanApi, type BackendTicket, type BackendMessage, type BackendUser } from '@/lib/portoplanApi'
+import { QRCodeSVG } from 'qrcode.react'
+import { Bot, QrCode, MessageSquare, Users, Contact, KanbanSquare, Workflow, Shield, Settings, LogOut, Search, RefreshCw, Send, CheckCheck, LockKeyhole } from 'lucide-react'
+import { portoPlanApi, type BackendTicket, type BackendMessage, type BackendUser, type BackendWhatsappConnection } from '@/lib/portoplanApi'
 
 /** Interface de homologacao: visual da V2 com dados reais do backend, sem mocks. */
 export default function RealInboxPilot() {
@@ -16,6 +17,34 @@ export default function RealInboxPilot() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [connectionOpen, setConnectionOpen] = useState(false)
+  const [connections, setConnections] = useState<BackendWhatsappConnection[]>([])
+  const [connectionBusy, setConnectionBusy] = useState(false)
+  const [connectionError, setConnectionError] = useState('')
+
+  async function refreshConnections() {
+    try {
+      const list = await portoPlanApi.whatsappConnections()
+      setConnections(Array.isArray(list) ? list : [])
+      setConnectionError('')
+    } catch { setConnectionError('Não foi possível consultar o estado real do WhatsApp.') }
+  }
+
+  useEffect(() => {
+    if (!user || !connectionOpen) return
+    void refreshConnections()
+    const timer = window.setInterval(() => { void refreshConnections() }, 5000)
+    return () => window.clearInterval(timer)
+  }, [user, connectionOpen])
+
+  async function startConnection(id: number) {
+    setConnectionBusy(true)
+    try {
+      await portoPlanApi.startWhatsappConnection(id)
+      await refreshConnections()
+    } catch { setConnectionError('Falha ao iniciar a conexão. Verifique o backend antes de tentar novamente.') }
+    finally { setConnectionBusy(false) }
+  }
 
   async function loadTickets(status: 'open' | 'unread' | 'closed' = filter) {
     setLoading(true)
@@ -107,7 +136,8 @@ export default function RealInboxPilot() {
       <div className="flex flex-col items-center gap-4">
         <div className="bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl h-11 w-11 flex items-center justify-center text-white" title="PortoPlan Bot"><Bot size={25}/></div>
         <nav className="flex flex-col items-center gap-2">
-          <div className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center" title="WhatsApp Inbox"><MessageSquare size={21}/></div>
+          <button onClick={()=>setConnectionOpen(false)} className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center" title="WhatsApp Inbox"><MessageSquare size={21}/></button>
+          <button onClick={()=>setConnectionOpen(true)} className="h-11 w-11 rounded-xl text-white flex items-center justify-center hover:bg-slate-700" title="Conectar WhatsApp"><QrCode size={21}/></button>
           {[
             { icon: Users, label: 'Chat interno' }, { icon: Contact, label: 'Contatos' },
             { icon: KanbanSquare, label: 'Kanban' }, { icon: Workflow, label: 'Fluxos' },
@@ -118,7 +148,20 @@ export default function RealInboxPilot() {
       <button type="button" onClick={signOut} title="Sair" className="text-slate-400 hover:text-white p-3"><LogOut size={20}/></button>
     </aside>
     <main className="flex flex-1 min-w-0">
-      <section className="w-80 md:w-96 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      {connectionOpen ? <section className="flex-1 overflow-auto p-5 md:p-10 space-y-6">
+        <div className="flex justify-between items-center"><h1 className="text-xl font-bold">Conectar WhatsApp</h1><button onClick={()=>void refreshConnections()} className="text-emerald-700 text-sm flex items-center gap-2"><RefreshCw size={16}/> Atualizar estado</button></div>
+        <p className="text-sm text-slate-500">Conexões reais autorizadas para sua conta. Se já estiver conectado, não é necessário escanear novamente.</p>
+        {connectionError && <p role="alert" className="text-red-700">{connectionError}</p>}
+        {connections.length === 0 && <p className="text-sm">Nenhuma conexão disponível para esta conta. Verifique o vínculo do usuário com o WhatsApp no BOT principal.</p>}
+        {connections.map(connection => <div key={connection.id} className="bg-white border rounded-xl p-6 max-w-xl space-y-4">
+          <div className="flex justify-between gap-3"><strong>{connection.name}</strong><span className="text-sm text-slate-500">Estado: {connection.status}</span></div>
+          {connection.status.toUpperCase() === "CONNECTED" ? <p className="text-emerald-700 font-semibold">WhatsApp conectado ao backend</p> : <>
+            {connection.qrcode ? <div className="bg-white p-4 inline-block border rounded-xl"><QRCodeSVG value={connection.qrcode} size={224} level="M" includeMargin /></div> : <p className="text-sm text-slate-500">QR Code ainda não disponível. Aguarde a geração pelo servidor.</p>}
+            <p className="text-xs text-slate-500">No WhatsApp do celular, abra Dispositivos conectados → Conectar dispositivo. O QR Code é recebido diretamente do backend.</p>
+            <button disabled={connectionBusy || connection.status.toUpperCase() === "OPENING" || connection.status.toLowerCase() === "qrcode"} onClick={()=>void startConnection(connection.id)} className="bg-emerald-600 text-white rounded-lg px-4 py-2 disabled:opacity-40">Iniciar conexão</button>
+          </>}
+        </div>)}
+      </section> : <><section className="w-80 md:w-96 shrink-0 bg-white border-r border-slate-200 flex flex-col">
         <header className="p-4 border-b space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h1 className="font-bold text-lg">WhatsApp Inbox {unread > 0 && <span className="text-white bg-emerald-500 rounded-full px-2 py-0.5 text-xs">{unread}</span>}</h1>
@@ -158,7 +201,7 @@ export default function RealInboxPilot() {
             <button disabled={busy || !draft.trim() || selected.status==='closed'} className="bg-emerald-600 text-white rounded-lg px-5 disabled:opacity-40 flex items-center gap-2"><Send size={17}/> Enviar</button>
           </form>
         </>}
-      </section>
+      </section></>}
     </main>
   </div>
 }

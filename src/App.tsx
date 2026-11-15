@@ -7,7 +7,6 @@ import { ChatProvider } from '@/context/ChatContext'
 import Layout from './components/Layout'
 import { ProtectedRoute, SuperAdminRoute } from './components/ProtectedRoute'
 import Index from './pages/Index'
-import Login from './pages/Login'
 import Inbox from './pages/Inbox'
 import Kanban from './pages/Kanban'
 import Flows from './pages/Flows'
@@ -36,7 +35,7 @@ const App = () => (
           {appBase !== '/' && <Route path="/" element={<RealInboxPilot />} />}
           {appBase !== '/' && <Route path="/inbox" element={<RealInboxPilot />} />}
           {/* Rota pública de login */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
 
           {/* Rotas no Layout com Sidebar */}
           {appBase === '/' && <Route element={<Layout />}>

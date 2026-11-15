@@ -17,7 +17,7 @@ export default function RealInboxPilot() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [connectionOpen, setConnectionOpen] = useState(false)
+  const [connectionOpen, setConnectionOpen] = useState(() => window.location.pathname.endsWith('/configuracoes'))
   const [connections, setConnections] = useState<BackendWhatsappConnection[]>([])
   const [connectionBusy, setConnectionBusy] = useState(false)
   const [connectionError, setConnectionError] = useState('')
@@ -143,20 +143,21 @@ export default function RealInboxPilot() {
       <div className="flex flex-col items-center gap-4">
         <div className="bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl h-11 w-11 flex items-center justify-center text-white" title="PortoPlan Bot"><Bot size={25}/></div>
         <nav className="flex flex-col items-center gap-2">
-          <button onClick={()=>setConnectionOpen(false)} className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center" title="WhatsApp Inbox"><MessageSquare size={21}/></button>
-          <button onClick={()=>setConnectionOpen(true)} className="h-11 w-11 rounded-xl text-white flex items-center justify-center hover:bg-slate-700" title="Conectar WhatsApp"><QrCode size={21}/></button>
+          <button onClick={()=>{setConnectionOpen(false);window.history.replaceState(null, "", "/v2/inbox")}} className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center" title="WhatsApp Inbox"><MessageSquare size={21}/></button>
+          
           {[
             { icon: Users, label: 'Chat interno' }, { icon: Contact, label: 'Contatos' },
             { icon: KanbanSquare, label: 'Kanban' }, { icon: Workflow, label: 'Fluxos' },
-            { icon: Shield, label: 'Administração' }, { icon: Settings, label: 'Configurações' }
+            { icon: Shield, label: 'Administração' }
           ].map(item => <span key={item.label} className="h-11 w-11 flex items-center justify-center text-slate-500 cursor-not-allowed" title={`${item.label} — integração pendente`} aria-label={`${item.label} indisponível na homologação`}><item.icon size={20}/></span>)}
+        <button onClick={()=>{setConnectionOpen(true);window.history.replaceState(null, "", "/v2/configuracoes")}} className={`h-11 w-11 rounded-xl text-white flex items-center justify-center hover:bg-slate-700 ${connectionOpen ? "bg-emerald-600" : ""}`} title="Configurações — WhatsApp"><Settings size={21}/></button>
         </nav>
       </div>
       <button type="button" onClick={signOut} title="Sair" className="text-slate-400 hover:text-white p-3"><LogOut size={20}/></button>
     </aside>
     <main className="flex flex-1 min-w-0">
       {connectionOpen ? <section className="flex-1 overflow-auto p-5 md:p-10 space-y-6">
-        <div className="flex justify-between items-center"><h1 className="text-xl font-bold">Conectar WhatsApp</h1><button onClick={()=>void refreshConnections()} className="text-emerald-700 text-sm flex items-center gap-2"><RefreshCw size={16}/> Atualizar estado</button></div>
+        <div className="flex justify-between items-center"><h1 className="text-xl font-bold">Configurações — Conexão do WhatsApp</h1><button onClick={()=>void refreshConnections()} className="text-emerald-700 text-sm flex items-center gap-2"><RefreshCw size={16}/> Atualizar estado</button></div>
         <p className="text-sm text-slate-500">Conexões reais autorizadas para sua conta. Se já estiver conectado, não é necessário escanear novamente.</p>
         {connectionError && <p role="alert" className="text-red-700">{connectionError}</p>}
         {connections.length === 0 && <p className="text-sm">Nenhuma conexão disponível para esta conta. Verifique o vínculo do usuário com o WhatsApp no BOT principal.</p>}

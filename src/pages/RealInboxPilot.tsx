@@ -187,7 +187,7 @@ export default function RealInboxPilot() {
           
           <Link to="/chat-interno" className="h-11 w-11 rounded-xl text-white flex items-center justify-center hover:bg-slate-700" title="Chat interno"><Users size={21}/></Link>
           {[
-            { icon: Contact, label: 'Contatos' },
+            
             { icon: KanbanSquare, label: 'Kanban' }, { icon: Workflow, label: 'Fluxos' },
             { icon: Shield, label: 'Administração' }
           ].map(item => <span key={item.label} className="h-11 w-11 flex items-center justify-center text-slate-500 cursor-not-allowed" title={`${item.label} — integração pendente`} aria-label={`${item.label} indisponível na homologação`}><item.icon size={20}/></span>)}

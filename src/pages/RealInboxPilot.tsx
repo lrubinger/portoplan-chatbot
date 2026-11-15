@@ -120,15 +120,22 @@ export default function RealInboxPilot() {
   const contactName = (ticket: BackendTicket) => ticket.contact?.name || ticket.contact?.number || `Atendimento #${ticket.id}`
   const formatTime = (value?: string) => value ? new Date(value).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : ''
 
-  if (!user) return <main className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
-    <form onSubmit={signIn} className="bg-white rounded-xl shadow-sm border p-8 w-full max-w-sm space-y-4">
-      <div className="flex items-center gap-3"><span className="p-2 bg-emerald-500 text-white rounded-xl"><Bot /></span><h1 className="text-xl font-bold">PortoPlan Bot V2</h1></div>
-      <p className="text-sm text-slate-500">Entre com as credenciais reais do PortoPlan BOT.</p>
-      <input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="E-mail" className="border rounded-lg p-3 w-full"/>
-      <input required type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Senha" className="border rounded-lg p-3 w-full"/>
-      {error && <p role="alert" className="text-red-700 text-sm">{error}</p>}
-      <button disabled={busy} className="bg-emerald-600 text-white rounded-lg p-3 w-full disabled:opacity-50">Entrar</button>
-    </form>
+  if (!user) return <main className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-slate-800">
+    <section className="relative md:w-1/2 min-h-[280px] bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-8 md:p-12 text-white flex flex-col justify-between overflow-hidden">
+      <div className="relative z-10 flex items-center gap-3"><span className="p-3 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl"><Bot size={26}/></span><div><h1 className="text-xl font-bold tracking-tight">CHATBOT PORTOPLAN</h1><p className="text-xs text-slate-300">Atendimento inteligente e WhatsApp Hub</p></div></div>
+      <div className="relative z-10 max-w-md py-10 md:py-16"><p className="inline-flex rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs text-emerald-300 mb-5">Ambiente V2 • Integração real</p><h2 className="text-3xl md:text-4xl font-extrabold leading-tight mb-4">Automação inteligente para seu atendimento.</h2><p className="text-slate-300 text-sm md:text-base">Organize conversas do WhatsApp com autenticação e dados reais do PortoPlan. Nenhum acesso demonstrativo é utilizado nesta versão.</p></div>
+      <p className="relative z-10 text-xs text-slate-400 border-t border-white/10 pt-6">PortoPlan BOT • Acesso seguro</p>
+    </section>
+    <section className="md:w-1/2 flex-1 flex items-center justify-center p-6 md:p-12 bg-white">
+      <form onSubmit={signIn} className="w-full max-w-md space-y-5">
+        <div><h2 className="text-2xl font-bold text-slate-900">Acesse sua conta</h2><p className="text-sm text-slate-500 mt-2">Use suas credenciais reais para acessar a plataforma.</p></div>
+        <label className="block text-sm font-medium text-slate-700">E-mail<input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="seu@email.com" className="mt-2 border border-slate-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-emerald-500"/></label>
+        <label className="block text-sm font-medium text-slate-700">Senha<input required type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Sua senha" className="mt-2 border border-slate-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-emerald-500"/></label>
+        {error && <p role="alert" className="text-red-700 bg-red-50 border border-red-100 rounded-lg p-3 text-sm">{error}</p>}
+        <button disabled={busy} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg p-3 w-full disabled:opacity-50">{busy ? 'Autenticando...' : 'Entrar na plataforma'}</button>
+        <p className="text-xs text-center text-slate-500">Acesso protegido pela autenticação do servidor PortoPlan.</p>
+      </form>
+    </section>
   </main>
 
   return <div className="h-screen w-screen flex overflow-hidden bg-slate-50 text-slate-800">

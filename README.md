@@ -129,3 +129,14 @@ npm run build
 ```
 
 Os arquivos otimizados serão gerados na pasta `dist/` e estarão prontos para deploy.
+
+## 🚀 Deploy na DigitalOcean
+
+O projeto inclui o script `deploy.sh` na raiz para automatizar o deploy na droplet:
+
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+Consulte o [CHANGELOG.md](CHANGELOG.md#deploy-na-digitalocean) para a configuração de Nginx, variáveis do script (`APP_DIR`, `WEB_ROOT`, `USE_SUDO`, etc.) e instruções da primeira instalação.

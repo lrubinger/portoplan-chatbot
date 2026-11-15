@@ -35,6 +35,7 @@ import {
   INITIAL_FLOWS,
 } from '@/data/mockData'
 import { KANBAN_COLUMN_STYLES } from '@/types/chat'
+import { pickContactPhoneFromPayload } from '@/lib/phone'
 
 interface ChatContextType {
   currentUser: User | null
@@ -309,6 +310,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const now = new Date()
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
+    // Ponto de ingestão: quando a integração real entregar o payload da API,
+    // este mesmo caminho resolve o telefone do remetente priorizando
+    // `senderPn` (número real) sobre o JID/LID cru.
+    const ingestedPhone = pickContactPhoneFromPayload({
+      senderPn: undefined,
+      participantAlt: undefined,
+      senderJid: conversations.find((c) => c.id === conversationId)?.contactPhone,
+    })
+
     const newMsg: Message = {
       id: `m-client-${Date.now()}`,
       sender: 'contact',
@@ -327,6 +337,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             unreadCount: c.id === selectedConversationId ? 0 : c.unreadCount + 1,
             isResolved: false,
             messages: [...c.messages, newMsg],
+            // Ingestão: se o payload trouxer um número real (senderPn),
+            // o contato passa a exibi-lo no lugar do identificador cru.
+            contactPhone: ingestedPhone || c.contactPhone,
           }
         }
         return c

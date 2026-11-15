@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { formatPhoneDisplay } from '@/lib/phone'
 
 interface CardFormData {
   contactName: string
@@ -344,7 +345,8 @@ export default function Kanban() {
               )}
 
               <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                <Phone className="h-2.5 w-2.5" /> {card.phone}
+                <Phone className="h-2.5 w-2.5" />{' '}
+                {card.phone === '—' ? '—' : formatPhoneDisplay(card.phone)}
               </div>
             </div>
           ))}

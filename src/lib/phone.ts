@@ -205,3 +205,26 @@ export function phoneSearchText(raw: string | null | undefined): string {
   const digits = extractPhoneDigits(raw)
   return `${raw ?? ''} ${digits} ${formatPhoneDisplay(raw ?? '')}`.toLowerCase()
 }
+
+// Campos em que a API não oficial entrega o remetente de uma mensagem.
+export interface WhatsAppSenderMeta {
+  /** Número real em E.164 (preferido, quando a API o envia). */
+  senderPn?: string
+  /** Alternativa já resolvida para número real (algumas builds da API). */
+  participantAlt?: string
+  /** JID/LID cru — último recurso (LID não é derivável offline). */
+  senderJid?: string
+}
+
+/**
+ * Ponto de ingestão de mensagens da API do WhatsApp: escolhe o melhor campo
+ * para preencher o telefone do contato — `senderPn` (número real) primeiro,
+ * `participantAlt` depois e o JID/LID cru apenas como fallback.
+ */
+export function pickContactPhoneFromPayload(payload: WhatsAppSenderMeta): string {
+  const fromSenderPn = payload.senderPn?.trim()
+  if (fromSenderPn) return fromSenderPn
+  const fromParticipantAlt = payload.participantAlt?.trim()
+  if (fromParticipantAlt) return fromParticipantAlt
+  return payload.senderJid?.trim() ?? ''
+}

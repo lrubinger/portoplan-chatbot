@@ -18,6 +18,7 @@ import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { displayContactName, phoneSearchText } from '@/lib/phone'
 import ConversationPanel from '@/components/inbox/ConversationPanel'
 
 export default function Inbox() {
@@ -39,10 +40,11 @@ export default function Inbox() {
   const [filterTab, setFilterTab] = useState<'all' | 'unread' | 'resolved'>('all')
 
   const filteredConversations = visibleConversations.filter((conv) => {
+    const term = searchTerm.toLowerCase()
     const matchesSearch =
-      conv.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.contactPhone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
+      conv.contactName.toLowerCase().includes(term) ||
+      phoneSearchText(conv.contactPhone).includes(term) ||
+      conv.lastMessage.toLowerCase().includes(term)
 
     if (!matchesSearch) return false
     if (filterTab === 'unread') return conv.unreadCount > 0
@@ -196,7 +198,7 @@ export default function Inbox() {
                             isSelected ? 'text-emerald-950' : 'text-slate-800'
                           }`}
                         >
-                          {conv.contactName}
+                          {displayContactName(conv.contactName, conv.contactPhone)}
                         </span>
                         {conv.privateLevel && (
                           <span title={ACCESS_LEVEL_LABELS[conv.privateLevel]}>
@@ -305,7 +307,7 @@ export default function Inbox() {
                         isActive ? 'font-semibold text-emerald-950' : 'text-slate-600',
                       )}
                     >
-                      {conv.contactName}
+                      {displayContactName(conv.contactName, conv.contactPhone)}
                     </span>
                     <button
                       type="button"

@@ -17,6 +17,7 @@ import AppSettings from './pages/Settings'
 import Administration from './pages/Administration'
 import NotFound from './pages/NotFound'
 import RealInboxPilot from './pages/RealInboxPilot'
+import RealInternalChat from './pages/RealInternalChat'
 
 // ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
 // AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
@@ -35,6 +36,7 @@ const App = () => (
           {appBase !== '/' && <Route path="/" element={<RealInboxPilot />} />}
           {appBase !== '/' && <Route path="/inbox" element={<RealInboxPilot />} />}
           {appBase !== '/' && <Route path="/configuracoes" element={<RealInboxPilot />} />}
+          {appBase !== '/' && <Route path="/chat-interno" element={<RealInternalChat />} />}
           {/* Rota pública de login */}
           <Route path="/login" element={<Navigate to="/" replace />} />
 

@@ -62,6 +62,15 @@ export const portoPlanApi = {
       `/messages/${encodeURIComponent(String(ticketId))}?pageNumber=${pageNumber}&markRead=false`
     )
   },
+  whatsappConnections() {
+    return request<BackendWhatsappConnection[]>('/whatsapp/profile/connections')
+  },
+  startWhatsappConnection(id: number) {
+    return request<{ status: string }>(`/whatsapp/profile/connections/${encodeURIComponent(String(id))}/start`, { method: 'POST' })
+  },
+  disconnectWhatsappConnection(id: number) {
+    return request<void>(`/whatsapp/profile/connections/${encodeURIComponent(String(id))}/disconnect`, { method: 'DELETE' })
+  },
   sendMessage(ticketId: number | string, body: string) {
     return request<void>(`/messages/${encodeURIComponent(String(ticketId))}`, {
       method: 'POST', body: JSON.stringify({ body })
@@ -85,4 +94,14 @@ export interface BackendMessage {
   fromMe: boolean
   createdAt: string
   ack?: number
+}
+
+/** Baileys QR payload comes from the authenticated backend, never from a browser-generated mock. */
+export interface BackendWhatsappConnection {
+  id: number
+  name: string
+  status: string
+  qrcode?: string | null
+  provider?: string | null
+  companyId?: number
 }

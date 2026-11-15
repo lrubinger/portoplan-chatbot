@@ -34,6 +34,7 @@ const App = () => (
           <Route path="/integracao-v2" element={<RealInboxPilot />} />
           {appBase !== '/' && <Route path="/" element={<RealInboxPilot />} />}
           {appBase !== '/' && <Route path="/inbox" element={<RealInboxPilot />} />}
+          {appBase !== '/' && <Route path="/configuracoes" element={<RealInboxPilot />} />}
           {/* Rota pública de login */}
           <Route path="/login" element={<Navigate to="/" replace />} />
 

@@ -168,6 +168,17 @@ export const KANBAN_COLUMN_STYLES: Pick<KanbanColumn, 'accent' | 'dot'>[] = [
   { accent: 'border-t-indigo-500', dot: 'bg-indigo-500' },
 ]
 
+// ---------- Conexão do WhatsApp (QR code) ----------
+
+export type WhatsappStatus = 'disconnected' | 'waiting' | 'connected'
+
+export interface WhatsappConnection {
+  status: WhatsappStatus
+  phone?: string
+  connectedAt?: string
+  device?: string
+}
+
 // ---------- Atendimento por Fluxo ----------
 
 export type FlowStepType = 'message' | 'question' | 'condition' | 'action'

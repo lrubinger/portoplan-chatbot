@@ -11,11 +11,14 @@ import {
   X,
   Columns2,
   Lock,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { displayContactName, phoneSearchText } from '@/lib/phone'
 import ConversationPanel from '@/components/inbox/ConversationPanel'
 
 export default function Inbox() {
@@ -27,16 +30,21 @@ export default function Inbox() {
     closeConversationTab,
     setSelectedConversationId,
     markAsRead,
+    whatsappConnection,
   } = useChat()
+
+  const waConnected = whatsappConnection.status === 'connected'
+  const waWaiting = whatsappConnection.status === 'waiting'
 
   const [searchTerm, setSearchTerm] = useState('')
   const [filterTab, setFilterTab] = useState<'all' | 'unread' | 'resolved'>('all')
 
   const filteredConversations = visibleConversations.filter((conv) => {
+    const term = searchTerm.toLowerCase()
     const matchesSearch =
-      conv.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.contactPhone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
+      conv.contactName.toLowerCase().includes(term) ||
+      phoneSearchText(conv.contactPhone).includes(term) ||
+      conv.lastMessage.toLowerCase().includes(term)
 
     if (!matchesSearch) return false
     if (filterTab === 'unread') return conv.unreadCount > 0
@@ -67,9 +75,28 @@ export default function Inbox() {
             </h1>
             <Badge
               variant="outline"
-              className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[11px]"
+              className={cn(
+                'text-[11px] gap-1.5 cursor-default',
+                waConnected
+                  ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  : waWaiting
+                    ? 'text-amber-700 bg-amber-50 border-amber-200'
+                    : 'text-slate-500 bg-slate-50 border-slate-200',
+              )}
+              title={
+                waConnected
+                  ? 'WhatsApp conectado'
+                  : waWaiting
+                    ? 'Aguardando leitura do QR code'
+                    : 'WhatsApp desconectado — pareie em Conexão do WhatsApp'
+              }
             >
-              PortoPlan Bot
+              {waConnected ? (
+                <Wifi className="h-3 w-3 text-emerald-600" />
+              ) : (
+                <WifiOff className="h-3 w-3 text-slate-400" />
+              )}
+              {waConnected ? 'WhatsApp conectado' : 'WhatsApp desconectado'}
             </Badge>
           </div>
 
@@ -171,7 +198,7 @@ export default function Inbox() {
                             isSelected ? 'text-emerald-950' : 'text-slate-800'
                           }`}
                         >
-                          {conv.contactName}
+                          {displayContactName(conv.contactName, conv.contactPhone)}
                         </span>
                         {conv.privateLevel && (
                           <span title={ACCESS_LEVEL_LABELS[conv.privateLevel]}>
@@ -280,7 +307,7 @@ export default function Inbox() {
                         isActive ? 'font-semibold text-emerald-950' : 'text-slate-600',
                       )}
                     >
-                      {conv.contactName}
+                      {displayContactName(conv.contactName, conv.contactPhone)}
                     </span>
                     <button
                       type="button"

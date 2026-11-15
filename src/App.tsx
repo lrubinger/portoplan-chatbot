@@ -15,6 +15,7 @@ import InternalChat from './pages/InternalChat'
 import Contacts from './pages/Contacts'
 import Automations from './pages/Automations'
 import AppSettings from './pages/Settings'
+import WhatsappConnection from './pages/WhatsappConnection'
 import Administration from './pages/Administration'
 import NotFound from './pages/NotFound'
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/kanban" element={<Kanban />} />
               <Route path="/fluxos" element={<Flows />} />
               <Route path="/configuracoes" element={<AppSettings />} />
+              <Route path="/conexao" element={<WhatsappConnection />} />
               <Route element={<SuperAdminRoute />}>
                 <Route path="/administracao" element={<Administration />} />
               </Route>

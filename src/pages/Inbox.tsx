@@ -11,6 +11,8 @@ import {
   X,
   Columns2,
   Lock,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Input } from '@/components/ui/input'
@@ -27,7 +29,11 @@ export default function Inbox() {
     closeConversationTab,
     setSelectedConversationId,
     markAsRead,
+    whatsappConnection,
   } = useChat()
+
+  const waConnected = whatsappConnection.status === 'connected'
+  const waWaiting = whatsappConnection.status === 'waiting'
 
   const [searchTerm, setSearchTerm] = useState('')
   const [filterTab, setFilterTab] = useState<'all' | 'unread' | 'resolved'>('all')
@@ -67,9 +73,28 @@ export default function Inbox() {
             </h1>
             <Badge
               variant="outline"
-              className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[11px]"
+              className={cn(
+                'text-[11px] gap-1.5 cursor-default',
+                waConnected
+                  ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  : waWaiting
+                    ? 'text-amber-700 bg-amber-50 border-amber-200'
+                    : 'text-slate-500 bg-slate-50 border-slate-200',
+              )}
+              title={
+                waConnected
+                  ? 'WhatsApp conectado'
+                  : waWaiting
+                    ? 'Aguardando leitura do QR code'
+                    : 'WhatsApp desconectado — pareie em Conexão do WhatsApp'
+              }
             >
-              PortoPlan Bot
+              {waConnected ? (
+                <Wifi className="h-3 w-3 text-emerald-600" />
+              ) : (
+                <WifiOff className="h-3 w-3 text-slate-400" />
+              )}
+              {waConnected ? 'WhatsApp conectado' : 'WhatsApp desconectado'}
             </Badge>
           </div>
 

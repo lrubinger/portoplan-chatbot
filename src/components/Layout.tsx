@@ -11,13 +11,24 @@ import {
   KanbanSquare,
   Workflow,
   Shield,
+  QrCode,
 } from 'lucide-react'
 import { ACCESS_LEVEL_LABELS } from '@/types/chat'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 export default function Layout() {
-  const { currentUser, logout, visibleConversations, internalMessages, isSuperAdmin } = useChat()
+  const {
+    currentUser,
+    logout,
+    visibleConversations,
+    internalMessages,
+    isSuperAdmin,
+    whatsappConnection,
+  } = useChat()
+  const waConnected = whatsappConnection.status === 'connected'
+  const waWaiting = whatsappConnection.status === 'waiting'
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -80,6 +91,56 @@ export default function Layout() {
               </TooltipTrigger>
               <TooltipContent side="right">
                 <p className="text-xs font-semibold">WhatsApp Inbox</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Conexão do WhatsApp (QR code) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <NavLink
+                  to="/conexao"
+                  className={({ isActive }) =>
+                    `relative h-11 w-11 rounded-xl flex items-center justify-center transition ${
+                      isActive
+                        ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`
+                  }
+                >
+                  <QrCode className="h-5 w-5" />
+                  <span
+                    title={
+                      waConnected
+                        ? 'WhatsApp conectado'
+                        : waWaiting
+                          ? 'Aguardando leitura do QR code'
+                          : 'WhatsApp desconectado'
+                    }
+                    className={cn(
+                      'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-900',
+                      waConnected ? 'bg-emerald-400' : waWaiting ? 'bg-amber-400' : 'bg-slate-500',
+                    )}
+                  />
+                </NavLink>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="text-xs font-semibold">Conexão do WhatsApp</p>
+                <p
+                  className={cn(
+                    'text-[10px]',
+                    waConnected
+                      ? 'text-emerald-400'
+                      : waWaiting
+                        ? 'text-amber-400'
+                        : 'text-slate-400',
+                  )}
+                >
+                  {waConnected
+                    ? 'WhatsApp conectado'
+                    : waWaiting
+                      ? 'Aguardando leitura do QR code'
+                      : 'WhatsApp desconectado'}
+                </p>
               </TooltipContent>
             </Tooltip>
 

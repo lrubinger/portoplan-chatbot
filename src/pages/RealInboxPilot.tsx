@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { Link } from 'react-router-dom'
 import { Bot, QrCode, MessageSquare, Users, Contact, KanbanSquare, Workflow, Shield, Settings, LogOut, Search, RefreshCw, Send, CheckCheck, LockKeyhole } from 'lucide-react'
 import { portoPlanApi, type BackendTicket, type BackendMessage, type BackendUser, type BackendWhatsappConnection } from '@/lib/portoplanApi'
 
@@ -184,8 +185,9 @@ export default function RealInboxPilot() {
         <nav className="flex flex-col items-center gap-2">
           <button onClick={()=>{setConnectionOpen(false);window.history.replaceState(null, "", "/v2/inbox")}} className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center" title="WhatsApp Inbox"><MessageSquare size={21}/></button>
           
+          <Link to="/chat-interno" className="h-11 w-11 rounded-xl text-white flex items-center justify-center hover:bg-slate-700" title="Chat interno"><Users size={21}/></Link>
           {[
-            { icon: Users, label: 'Chat interno' }, { icon: Contact, label: 'Contatos' },
+            { icon: Contact, label: 'Contatos' },
             { icon: KanbanSquare, label: 'Kanban' }, { icon: Workflow, label: 'Fluxos' },
             { icon: Shield, label: 'Administração' }
           ].map(item => <span key={item.label} className="h-11 w-11 flex items-center justify-center text-slate-500 cursor-not-allowed" title={`${item.label} — integração pendente`} aria-label={`${item.label} indisponível na homologação`}><item.icon size={20}/></span>)}

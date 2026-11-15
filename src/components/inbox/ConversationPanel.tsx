@@ -35,6 +35,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { DEMO_USERS } from '@/data/mockData'
 import { cn } from '@/lib/utils'
+import { displayContactName, formatPhoneDisplay } from '@/lib/phone'
 import { toast } from 'sonner'
 
 interface ConversationPanelProps {
@@ -126,7 +127,7 @@ export default function ConversationPanel({ conversationId, onClose }: Conversat
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-slate-900 truncate">
-                {conversation.contactName}
+                {displayContactName(conversation.contactName, conversation.contactPhone)}
               </h2>
               {conversation.privateLevel && (
                 <Badge
@@ -154,7 +155,7 @@ export default function ConversationPanel({ conversationId, onClose }: Conversat
               )}
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="truncate">{conversation.contactPhone}</span>
+              <span className="truncate">{formatPhoneDisplay(conversation.contactPhone)}</span>
               <span>•</span>
               <span className="truncate">
                 Atendente: {conversation.assignedAgent || currentUser?.name}
@@ -190,8 +191,9 @@ export default function ConversationPanel({ conversationId, onClose }: Conversat
             <PopoverContent className="w-80 p-3 space-y-2 text-xs" align="end">
               <p className="font-semibold text-slate-800">Simular mensagem recebida no WhatsApp:</p>
               <p className="text-slate-500 text-[11px]">
-                Envie uma resposta fictícia como se fosse o cliente ({conversation.contactName})
-                para testar o fluxo.
+                Envie uma resposta fictícia como se fosse o cliente (
+                {displayContactName(conversation.contactName, conversation.contactPhone)}) para
+                testar o fluxo.
               </p>
               <Input
                 placeholder="Digite a mensagem do cliente..."
@@ -385,7 +387,8 @@ export default function ConversationPanel({ conversationId, onClose }: Conversat
           <DialogHeader>
             <DialogTitle className="text-base">Transferir conversa</DialogTitle>
             <DialogDescription className="text-xs">
-              Escolha o atendente que vai assumir a conversa com {conversation.contactName}.
+              Escolha o atendente que vai assumir a conversa com{' '}
+              {displayContactName(conversation.contactName, conversation.contactPhone)}.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-1">

@@ -34,11 +34,12 @@ const App = () => (
           {/* Piloto isolado: autenticação e Inbox do backend real */}
           <Route path="/integracao-v2" element={<RealInboxPilot />} />
           {appBase !== '/' && <Route path="/" element={<RealInboxPilot />} />}
+          {appBase !== '/' && <Route path="/inbox" element={<RealInboxPilot />} />}
           {/* Rota pública de login */}
           <Route path="/login" element={<Login />} />
 
           {/* Rotas no Layout com Sidebar */}
-          <Route element={<Layout />}>
+          {appBase === '/' && <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
 
             <Route element={<ProtectedRoute />}>
@@ -53,7 +54,7 @@ const App = () => (
                 <Route path="/administracao" element={<Administration />} />
               </Route>
             </Route>
-          </Route>
+          </Route>}
 
           <Route path="*" element={<NotFound />} />
         </Routes>

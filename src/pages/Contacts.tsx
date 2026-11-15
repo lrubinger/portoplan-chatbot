@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { displayContactName, formatPhoneDisplay, phoneSearchText } from '@/lib/phone'
 
 export default function Contacts() {
   const { contacts, addContact, openOrCreateConversationWithContact } = useChat()
@@ -48,10 +49,11 @@ export default function Contacts() {
 
   // Filtragem
   const filteredContacts = contacts.filter((c) => {
+    const term = searchTerm.toLowerCase()
     const matchesSearch =
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()))
+      c.name.toLowerCase().includes(term) ||
+      phoneSearchText(c.phone).includes(term) ||
+      (c.email && c.email.toLowerCase().includes(term))
 
     const matchesTag = selectedTag ? c.tags.includes(selectedTag) : true
     return matchesSearch && matchesTag
@@ -263,11 +265,11 @@ export default function Contacts() {
                     />
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
-                        {contact.name}
+                        {displayContactName(contact.name, contact.phone)}
                       </h3>
                       <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                         <Phone className="h-3 w-3 text-emerald-600" />
-                        {contact.phone}
+                        {formatPhoneDisplay(contact.phone)}
                       </p>
                     </div>
                   </div>

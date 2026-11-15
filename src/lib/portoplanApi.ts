@@ -71,6 +71,28 @@ export const portoPlanApi = {
   disconnectWhatsappConnection(id: number) {
     return request<void>(`/whatsapp/profile/connections/${encodeURIComponent(String(id))}/disconnect`, { method: 'DELETE' })
   },
+  updateTicket(id: number | string, changes: { status?: string; userId?: number | string; queueId?: number | null }) {
+    return request<BackendTicket>(`/tickets/${encodeURIComponent(String(id))}`, {
+      method: 'PUT', body: JSON.stringify(changes)
+    })
+  },
+  users() {
+    return request<Array<{ id: number; name: string; email?: string }>>('/users/list')
+  },
+  contacts(pageNumber = 1, searchParam = '') {
+    return request<{ contacts: Array<{ id: number; name: string; number: string }>; hasMore: boolean }>(
+      `/contacts?pageNumber=${pageNumber}&searchParam=${encodeURIComponent(searchParam)}`
+    )
+  },
+  quickMessages() {
+    return request<{ records: Array<{ id: number; shortcode: string; message: string }>; hasMore: boolean }>('/quick-messages')
+  },
+  internalChatContacts() {
+    return request<unknown>('/internal-chat/contacts')
+  },
+  kanban() {
+    return request<unknown>('/ticket/kanban')
+  },
   sendMessage(ticketId: number | string, body: string) {
     return request<void>(`/messages/${encodeURIComponent(String(ticketId))}`, {
       method: 'POST', body: JSON.stringify({ body })
